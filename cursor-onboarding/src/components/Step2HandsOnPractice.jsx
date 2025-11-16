@@ -11,6 +11,7 @@ function Step2HandsOnPractice({ onNext }) {
   ])
   const [showHint, setShowHint] = useState(true)
   const [completed, setCompleted] = useState(false)
+  const [copiedIndex, setCopiedIndex] = useState(null)
 
   // Wizard-of-Oz: Hardcoded responses based on keywords
   const getAIResponse = (input) => {
@@ -75,14 +76,192 @@ if (result.success) {
       }
     }
 
+    if (lowerInput.includes('debug') || lowerInput.includes('error') || lowerInput.includes('fix')) {
+      return {
+        content: "Let me help you debug! Here's a function with comprehensive error handling:",
+        code: `function processUserData(user) {
+  // Validate input
+  if (!user) {
+    throw new Error('User object is required');
+  }
+
+  if (!user.email || !user.name) {
+    throw new Error('User must have email and name');
+  }
+
+  // Process with error handling
+  try {
+    const normalized = {
+      name: user.name.trim(),
+      email: user.email.toLowerCase(),
+      createdAt: new Date().toISOString()
+    };
+
+    console.log('User processed:', normalized);
+    return normalized;
+  } catch (error) {
+    console.error('Processing failed:', error);
+    throw error;
+  }
+}`,
+        explanation: "Good debugging includes validation, clear error messages, and try-catch blocks. This helps you identify issues quickly."
+      }
+    }
+
+    if (lowerInput.includes('test') || lowerInput.includes('unit')) {
+      return {
+        content: "Great! Here's how to write a simple unit test:",
+        code: `// Function to test
+function add(a, b) {
+  return a + b;
+}
+
+// Test cases
+function testAdd() {
+  console.assert(add(2, 3) === 5, 'Should add positive numbers');
+  console.assert(add(-1, 1) === 0, 'Should handle negative numbers');
+  console.assert(add(0, 0) === 0, 'Should handle zeros');
+  console.log('✅ All tests passed!');
+}
+
+// Run tests
+testAdd();
+
+// Or with Jest/Vitest:
+describe('add function', () => {
+  test('adds two numbers correctly', () => {
+    expect(add(2, 3)).toBe(5);
+  });
+});`,
+        explanation: "Testing ensures your code works as expected. Start simple with console.assert, then graduate to testing frameworks like Jest or Vitest."
+      }
+    }
+
+    if (lowerInput.includes('refactor') || lowerInput.includes('improve') || lowerInput.includes('clean')) {
+      return {
+        content: "I'll show you a refactoring example - transforming messy code into clean code:",
+        code: `// Before: Nested and hard to read
+function getUserStatus(user) {
+  if (user) {
+    if (user.active) {
+      if (user.verified) {
+        return 'active-verified';
+      } else {
+        return 'active-unverified';
+      }
+    } else {
+      return 'inactive';
+    }
+  } else {
+    return 'no-user';
+  }
+}
+
+// After: Clean and readable
+function getUserStatus(user) {
+  if (!user) return 'no-user';
+  if (!user.active) return 'inactive';
+  return user.verified ? 'active-verified' : 'active-unverified';
+}`,
+        explanation: "Refactoring improves code readability without changing functionality. Use early returns, avoid deep nesting, and choose descriptive names."
+      }
+    }
+
+    if (lowerInput.includes('database') || lowerInput.includes('sql') || lowerInput.includes('query')) {
+      return {
+        content: "Here's a safe database query pattern with parameterization:",
+        code: `// Using parameterized queries (prevents SQL injection)
+async function getUserByEmail(email) {
+  const query = \`
+    SELECT id, name, email, created_at
+    FROM users
+    WHERE email = $1
+    LIMIT 1
+  \`;
+
+  try {
+    const result = await db.query(query, [email]);
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error('Database query failed:', error);
+    throw new Error('Failed to fetch user');
+  }
+}
+
+// Usage:
+const user = await getUserByEmail('user@example.com');
+if (user) {
+  console.log('Found user:', user);
+}`,
+        explanation: "Always use parameterized queries ($1, $2, etc.) instead of string concatenation. This prevents SQL injection attacks and handles escaping automatically."
+      }
+    }
+
+    if (lowerInput.includes('component') || lowerInput.includes('react')) {
+      return {
+        content: "Let me create a React component with hooks and best practices:",
+        code: `import { useState, useEffect } from 'react';
+
+function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        setLoading(true);
+        const response = await fetch(\`/api/users/\${userId}\`);
+        const data = await response.json();
+        setUser(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchUser();
+  }, [userId]);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!user) return <div>User not found</div>;
+
+  return (
+    <div className="user-profile">
+      <h2>{user.name}</h2>
+      <p>{user.email}</p>
+    </div>
+  );
+}`,
+        explanation: "This component demonstrates React hooks (useState, useEffect), async data fetching, loading states, and error handling - all essential patterns."
+      }
+    }
+
     // Default helpful response
     return {
       content: "I can help with that! For this demo, try asking me about:",
       suggestions: [
         "- Email validation",
         "- Sorting arrays",
-        "- Fetching data from APIs"
+        "- Fetching data from APIs",
+        "- Debugging and error handling",
+        "- Writing unit tests",
+        "- Refactoring code",
+        "- Database queries",
+        "- Creating React components"
       ]
+    }
+  }
+
+  const handleCopyCode = async (code, index) => {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopiedIndex(index)
+      setTimeout(() => setCopiedIndex(null), 2000)
+    } catch (err) {
+      console.error('Failed to copy code:', err)
     }
   }
 
@@ -169,7 +348,12 @@ if (result.success) {
                       <div className="code-block">
                         <div className="code-header">
                           <span>Generated Code</span>
-                          <button className="copy-btn">Copy</button>
+                          <button
+                            className="copy-btn"
+                            onClick={() => handleCopyCode(msg.code, idx)}
+                          >
+                            {copiedIndex === idx ? '✓ Copied!' : 'Copy'}
+                          </button>
                         </div>
                         <pre><code>{msg.code}</code></pre>
                       </div>

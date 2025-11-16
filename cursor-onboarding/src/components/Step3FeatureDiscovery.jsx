@@ -1,9 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './Step3FeatureDiscovery.css'
 
 function Step3FeatureDiscovery({ onNext }) {
   const [activeFeature, setActiveFeature] = useState(null)
-  const [discoveredFeatures, setDiscoveredFeatures] = useState([])
+
+  // Load discovered features from localStorage
+  const [discoveredFeatures, setDiscoveredFeatures] = useState(() => {
+    const saved = localStorage.getItem('cursor-onboarding-discovered-features')
+    return saved ? JSON.parse(saved) : []
+  })
+
+  // Save discovered features to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('cursor-onboarding-discovered-features', JSON.stringify(discoveredFeatures))
+  }, [discoveredFeatures])
 
   const features = [
     {

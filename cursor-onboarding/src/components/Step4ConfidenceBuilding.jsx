@@ -54,6 +54,12 @@ function Step4ConfidenceBuilding({ onNext }) {
     }
   }
 
+  const handleTryAgain = () => {
+    setUserSolution('')
+    setShowHint(false)
+    setCompleted(false)
+  }
+
   return (
     <div className="step4-container">
       <div className="step-header fade-in">
@@ -139,9 +145,14 @@ function Step4ConfidenceBuilding({ onNext }) {
                   You successfully identified the problem and knew how to ask AI for help.
                   This is exactly how you'll use Cursor in real development!
                 </p>
-                <button className="btn btn-primary" onClick={onNext}>
-                  Complete Onboarding →
-                </button>
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem' }}>
+                  <button className="btn-secondary" onClick={handleTryAgain}>
+                    ↺ Try Again
+                  </button>
+                  <button className="btn btn-primary" onClick={onNext}>
+                    Complete Onboarding →
+                  </button>
+                </div>
               </div>
             </div>
           )}
